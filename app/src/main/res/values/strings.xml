@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">VolleyBall Counter</string>
+    <string name="reset_button">Reset</string>
+    <string name="undo_button">Undo</string>
+    <string name="redo_button">Redo</string>
+    <string name="service">Service</string>
+    <string name="attack">Attack</string>
+    <string name="block">Block</string>
+    <string name="opponent_error">Opp Error</string>
+    <string name="team_a">Team A</string>
+    <string name="team_b">Team B</string>
+
+</resources>
