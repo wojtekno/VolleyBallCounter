@@ -12,6 +12,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
    private int scoreA;
     private int scoreB;
+    private int[] getCurrentStats = new int[10];
     private int[] currentStatsA = {0, 0, 0, 0, 0,};
     private int[] currentStatsB = {0, 0, 0, 0, 0};
     private int[] undoStats = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
