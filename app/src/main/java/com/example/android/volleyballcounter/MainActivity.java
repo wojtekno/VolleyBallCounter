@@ -10,13 +10,13 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-   private int scoreA;
+    private int scoreA;
     private int scoreB;
     private int[] getCurrentStats = new int[10];
     private int[] currentStatsA = {0, 0, 0, 0, 0,};
     private int[] currentStatsB = {0, 0, 0, 0, 0};
-    private int[] undoStats = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    private int[] redoStats = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    private int[] statsForUndo = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    private int[] statsForRedo = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     Button undoButton;
     Button redoButton;
     Button resetButton;
@@ -27,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private final int COUNTDOWNINTERVAL = 1000;
     private boolean areImageButtonsEnabled = true;
     private boolean isEndOfGame = false;
+    private boolean isEndOfGameForUndo;
+    private boolean isEndOfGameForRedo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState) {
         outState.putIntArray("currentStatsA", currentStatsA);
         outState.putIntArray("currentStatsB", currentStatsB);
-        outState.putIntArray("undoStats", undoStats);
-        outState.putIntArray("redoStats", redoStats);
+        outState.putIntArray("statsForUndo", statsForUndo);
+        outState.putIntArray("statsForRedo", statsForRedo);
         outState.putBoolean("isUndoButtEnabled", undoButton.isEnabled());
         outState.putBoolean("isRedoButtEnabled", redoButton.isEnabled());
         outState.putBoolean("isResetButtEnabled", resetButton.isEnabled());
@@ -60,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         currentStatsA = savedInstanceState.getIntArray("currentStatsA");
         currentStatsB = savedInstanceState.getIntArray("currentStatsB");
-        undoStats = savedInstanceState.getIntArray("undoStats");
-        redoStats = savedInstanceState.getIntArray("redoStats");
+        statsForUndo = savedInstanceState.getIntArray("statsForUndo");
+        statsForRedo = savedInstanceState.getIntArray("statsForRedo");
         undoButton.setEnabled(savedInstanceState.getBoolean("isUndoButtEnabled"));
         redoButton.setEnabled(savedInstanceState.getBoolean("isRedoButtEnabled"));
         resetButton.setEnabled((savedInstanceState.getBoolean("isResetButtEnabled")));
@@ -118,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
         button7.setEnabled(flag);
         button8.setEnabled(flag);
     }
+
     void enableFunctionButtons(boolean flag) {
         undoButton.setEnabled(flag);
         resetButton.setEnabled(flag);
@@ -126,10 +129,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void addAttackA(View view) {
         saveStatsForUndo();
-        Log.v("Main", "after saved:" + undoStats[1] + "  blocks: " + undoStats[2]);
+        Log.v("Main", "after saved:" + statsForUndo[1] + "  blocks: " + statsForUndo[2]);
 
         currentStatsA[1] = changeStats(currentStatsA[1]);
-        Log.v("Main", "3)after saved:" + undoStats[1] + "  blocks: " + undoStats[2]);
+        Log.v("Main", "3)after saved:" + statsForUndo[1] + "  blocks: " + statsForUndo[2]);
 //        Log.v("Main", "curr[1]: " + currentStatsA[1] + " current [2]" + currentStatsA[2]);
         afterChangeStats();
     }
@@ -183,17 +186,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void saveStatsForUndo() {
+        isEndOfGameForUndo = isEndOfGame;
         for (int i = 0; i < currentStatsA.length; i++) {
-            undoStats[i] = currentStatsA[i];
-            undoStats[i + 5] = currentStatsB[i];
+            statsForUndo[i] = currentStatsA[i];
+            statsForUndo[i + 5] = currentStatsB[i];
         }
     }
 
     void saveStatsForRedo() {
-        SavedStats statsForRedo = new SavedStats()
+        isEndOfGameForRedo = isEndOfGame;
         for (int i = 0; i < currentStatsA.length; i++) {
-            redoStats[i] = currentStatsA[i];
-            redoStats[i + 5] = currentStatsB[i];
+            this.statsForRedo[i] = currentStatsA[i];
+            this.statsForRedo[i + 5] = currentStatsB[i];
         }
     }
 
@@ -217,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void startNewGame(View view) {
         saveStatsForUndo();
+        isEndOfGame = false;
         currentStatsA = new int[]{0, 0, 0, 0, 0};
         currentStatsB = new int[]{0, 0, 0, 0, 0};
         refreshScore();
@@ -248,7 +253,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    void setFromSavedStats(int[] savedStats) {
+    void setFromSavedStats(int[] savedStats, boolean isEndOfGame) {
+        this.isEndOfGame = isEndOfGame;
         for (int i = 0; i < currentStatsA.length; i++) {
             currentStatsA[i] = savedStats[i];
             currentStatsB[i] = savedStats[i + 5];
@@ -258,26 +264,30 @@ public class MainActivity extends AppCompatActivity {
     //TODO workout undo reset redo
     public void undo(View view) {
         saveStatsForRedo();
-        setFromSavedStats(undoStats);
+        setFromSavedStats(statsForUndo, isEndOfGameForUndo);
         refreshScore();
         displayStats();
         undoButton.setEnabled(Boolean.FALSE);
         redoButton.setEnabled(Boolean.TRUE);
         resetButton.setEnabled(Boolean.TRUE);
-        if(!areImageButtonsEnabled) {
+        if (isEndOfGame) {
+            enableImageButtons(false);
+        } else {
             enableImageButtons(true);
         }
     }
 
     public void redo(View view) {
         saveStatsForUndo();
-        setFromSavedStats(redoStats);
+        setFromSavedStats(statsForRedo, isEndOfGameForRedo);
         refreshScore();
         displayStats();
         undoButton.setEnabled(Boolean.TRUE);
         redoButton.setEnabled(Boolean.FALSE);
         resetButton.setEnabled(Boolean.TRUE);
-        if(!areImageButtonsEnabled) {
+        if (isEndOfGame) {
+            enableImageButtons(false);
+        } else {
             enableImageButtons(true);
         }
     }
@@ -359,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
 
                 public void onTick(long millisUntilFinished) {
                     enableImageButtons(false);
-                    enableImageButtons(false);
+                    enableFunctionButtons(false);
                 }
 
                 public void onFinish() {
@@ -409,6 +419,7 @@ public class MainActivity extends AppCompatActivity {
 
     boolean ifWinTheMatch() {
         if (currentStatsA[0] == 3 | currentStatsB[0] == 3) {
+            isEndOfGame = true;
             return true;
         }
         return false;
